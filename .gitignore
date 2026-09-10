@@ -396,3 +396,6 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# SonarCloud scanner (downloaded by CI, cached locally by tooling)
+.sonar/
