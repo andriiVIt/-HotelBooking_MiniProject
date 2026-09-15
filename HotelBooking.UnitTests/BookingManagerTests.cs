@@ -333,7 +333,7 @@ namespace HotelBooking.UnitTests
         }
 
         // Data-driven test: each case books the two rooms differently around the queried
-        // period and asserts exactly which dates come back as fully occupied.
+        // period and asserts exactly which dates come back as fully occupied./////
         public static IEnumerable<object[]> FullyOccupiedDatesCases()
         {
             DateTime today = DateTime.Today;
