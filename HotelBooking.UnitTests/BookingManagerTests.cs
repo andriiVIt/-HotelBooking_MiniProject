@@ -78,7 +78,7 @@ namespace HotelBooking.UnitTests
         // Data-driven test covering the boundary value analysis of the overlap check in
         // BookingManager.FindAvailableRoom: an existing booking occupies room 1 from
         // day 10 to day 20. Each case places the requested period at, or just past, the
-        // boundaries of that existing booking, so the assertions directly exercise the
+        //   boundaries of that existing booking, so the assertions directly exercise the
         // "<" / ">" comparisons used by the overlap condition.
         public static IEnumerable<object[]> OverlapBoundaryCases()
         {
