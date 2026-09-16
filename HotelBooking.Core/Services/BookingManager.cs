@@ -45,8 +45,8 @@ namespace HotelBooking.Core
             foreach (var room in rooms)
             {
                 var activeBookingsForCurrentRoom = activeBookings.Where(b => b.RoomId == room.Id);
-                if (activeBookingsForCurrentRoom.All(b => startDate <= b.StartDate &&
-                        endDate <= b.StartDate || startDate > b.EndDate && endDate > b.EndDate))
+                if (activeBookingsForCurrentRoom.All(b => startDate < b.StartDate &&
+                    endDate < b.StartDate || startDate > b.EndDate && endDate > b.EndDate))
                 {
                     return room.Id;
                 }
