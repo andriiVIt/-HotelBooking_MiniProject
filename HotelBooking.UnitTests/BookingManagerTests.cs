@@ -43,9 +43,9 @@ namespace HotelBooking.UnitTests
         // InlineData requires compile-time constants, so dates are expressed as day
         // offsets and converted to DateTime.Today.AddDays(...) inside the test body.
         [Theory]
-        [InlineData(0, 5)]   // start date is today (not in the future)
-        [InlineData(-1, 5)]  // start date is in the past
-        [InlineData(5, 2)]   // start date later than end date
+        [InlineData(0, 5)] // start date is today (not in the future)
+        [InlineData(-1, 5)] // start date is in the past
+        [InlineData(5, 2)] // start date later than end date
         public async Task FindAvailableRoom_InvalidDateRange_ThrowsArgumentException(int startOffset, int endOffset)
         {
             // Arrange
@@ -83,12 +83,12 @@ namespace HotelBooking.UnitTests
         public static IEnumerable<object[]> OverlapBoundaryCases()
         {
             // requestedStartOffset, requestedEndOffset, expectRoom1Available
-            yield return new object[] { 1, 9, true };    // ends the day before existing booking starts
-            yield return new object[] { 1, 10, false };  // ends exactly on existing start date -> overlap
+            yield return new object[] { 1, 9, true }; // ends the day before existing booking starts
+            yield return new object[] { 1, 10, false }; // ends exactly on existing start date -> overlap
             yield return new object[] { 15, 15, false }; // fully inside existing booking -> overlap
             yield return new object[] { 20, 25, false }; // starts exactly on existing end date -> overlap
-            yield return new object[] { 21, 25, true };  // starts the day after existing booking ends
-            yield return new object[] { 5, 25, false };  // fully surrounds existing booking -> overlap
+            yield return new object[] { 21, 25, true }; // starts the day after existing booking ends
+            yield return new object[] { 5, 25, false }; // fully surrounds existing booking -> overlap
         }
 
         [Theory]
@@ -187,7 +187,36 @@ namespace HotelBooking.UnitTests
             Assert.Empty(overlappingBookingsForReturnedRoom);
         }
 
-        #endregion
+
+        [Fact]
+        public async Task FindAvailableRoom_FirstTwoRoomsOccupied_ReturnsThirdRoomId()
+        {
+            // Arrange
+            var threeRooms = new List<Room>
+            {
+                new Room{Id = 1,Description = "A"},
+                new Room{Id = 2,Description = "B"},
+                new Room{Id = 3,Description = "C"},
+               
+            };
+            mockRoomRepository.Setup(r=> r.GetAllAsync()) .ReturnsAsync(threeRooms);
+            DateTime start = DateTime.Today.AddDays(10);
+            DateTime end = DateTime.Today.AddDays(20);
+
+            SetUpBookings(
+                new Booking { Id = 1, RoomId = 1, IsActive = true, StartDate = start, EndDate = end },
+                new Booking { Id = 2, RoomId = 2, IsActive = true, StartDate = start, EndDate = end });
+                // Act
+                int roomId = await bookingManager.FindAvailableRoom(start, end);
+                
+                // Assert
+                Assert.Equal(3, roomId);
+        }
+
+    #endregion
+        
+        
+        
 
         #region CreateBooking
 
