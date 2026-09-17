@@ -421,6 +421,42 @@ namespace HotelBooking.UnitTests
             // Assert
             Assert.Equal(expectedDates, occupiedDates);
         }
+        
+        
+        // This test targets the noOfRooms comparison in GetFullyOccupiedDates: with more rooms                                                          
+        // than bookings, no day should ever be reported as fully occupied, even though bookings                                                         
+        // exist. Every other test in this region uses the default 2-room setup, so this is the                                                          
+        // only place where noOfRooms is anything other than 2.
+
+
+        [Fact]
+        public async Task GetFullyOccupiedDates_MoreRoomsThanBookings_ReturnsEmptyList()
+        {
+            // Arrange: override the default 2-room setup with 3 rooms, so noOfRooms == 3.
+            var threeRooms = new List<Room>
+            {
+                new Room{Id = 1,Description = "A"},
+                new Room{Id = 2,Description = "B"},
+                new Room{Id = 3,Description = "C"},
+            };
+            mockRoomRepository.Setup(r => r.GetAllAsync()).ReturnsAsync(threeRooms);
+            
+            DateTime start = DateTime.Today.AddDays(10);
+            DateTime end = DateTime.Today.AddDays(12);
+            
+            // Only rooms 1 and 2 are booked for the whole period; room 3 stays free every day
+            
+            SetUpBookings(
+                new Booking { Id = 1, RoomId = 1, IsActive = true, StartDate = start, EndDate = end },
+                new Booking { Id = 2, RoomId = 2, IsActive = true, StartDate = start, EndDate = end });
+            
+            //Act
+            List<DateTime> occupiedDates = await bookingManager.GetFullyOccupiedDates(start, end);
+            
+            // Assert: noOfBookings (2) is always less than noOfRooms (3), so no date counts as                                                          
+            // fully occupied. 
+            Assert.Empty(occupiedDates);
+        }
 
         #endregion
     }
