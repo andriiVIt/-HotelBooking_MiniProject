@@ -361,6 +361,25 @@ namespace HotelBooking.UnitTests
             Assert.Empty(occupiedDates);
         }
 
+        // Regression test for the "count bookings instead of distinct rooms" bug: two active
+        // bookings on the SAME room must not make a 2-room hotel look fully occupied.
+        [Fact]
+        public async Task GetFullyOccupiedDates_TwoActiveBookingsOnSameRoom_ReturnsEmptyList()
+        {
+            // Arrange: both bookings are on room 1, so room 2 is still free.
+            DateTime start = DateTime.Today.AddDays(5);
+            DateTime end = DateTime.Today.AddDays(10);
+            SetUpBookings(
+                new Booking { Id = 1, RoomId = 1, IsActive = true, StartDate = start, EndDate = end },
+                new Booking { Id = 2, RoomId = 1, IsActive = true, StartDate = start, EndDate = end });
+
+            // Act
+            List<DateTime> occupiedDates = await bookingManager.GetFullyOccupiedDates(start, end);
+
+            // Assert
+            Assert.Empty(occupiedDates);
+        }
+
         // Data-driven test: each case books the two rooms differently around the queried
         // period and asserts exactly which dates come back as fully occupied./////
         public static IEnumerable<object[]> FullyOccupiedDatesCases()

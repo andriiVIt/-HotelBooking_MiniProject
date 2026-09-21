@@ -71,7 +71,11 @@ namespace HotelBooking.Core
                     var noOfBookings = from b in bookings
                                        where b.IsActive && d >= b.StartDate && d <= b.EndDate
                                        select b;
-                    if (noOfBookings.Count() >= noOfRooms)
+                    // OLD CODE (BUG): two bookings on the same room were counted as two occupied rooms.
+                    //if (noOfBookings.Count() >= noOfRooms)
+
+                    // FIXED: each booked room is counted only once.
+                    if (noOfBookings.Select(b => b.RoomId).Distinct().Count() >= noOfRooms)
                         fullyOccupiedDates.Add(d);
                 }
             }
