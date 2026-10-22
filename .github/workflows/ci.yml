@@ -72,7 +72,7 @@ jobs:
 
           dotnet build HotelBooking.sln --configuration Release
 
-          dotnet-coverage collect "dotnet test HotelBooking.sln --configuration Release --no-build" -f xml -o coverage.xml
+          dotnet-coverage collect "dotnet test HotelBooking.sln --configuration Release --no-build --filter FullyQualifiedName!~HotelBooking.SeleniumTests" -f xml -o coverage.xml
           $testExitCode = $LASTEXITCODE
 
           .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="$env:SONAR_TOKEN"
