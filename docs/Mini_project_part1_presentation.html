@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mini project part 1 - Unit testing the hotel booking core</title>
+<style>
+  @page { size: 1280px 720px; margin: 0; }
+  :root {
+    --bg: #ffffff; --ink: #14213d; --muted: #5b6478; --line: #dfe3ec;
+    --accent: #0f766e; --accent-soft: #e3f4f1; --warn: #b45309; --warn-soft: #fdf1e0;
+    --bad: #b42318; --bad-soft: #fde8e6; --good: #067647; --good-soft: #e0f5ea;
+    --code-bg: #0f172a; --code-ink: #e2e8f0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #fff; }
+  body { font-family: "Segoe UI", Arial, sans-serif; color: var(--ink); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .slide { width: 1280px; height: 720px; padding: 56px 72px 48px; position: relative; page-break-after: always; overflow: hidden; background: var(--bg); }
+  .slide:last-child { page-break-after: auto; }
+  .kicker { font-size: 15px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); font-weight: 700; margin-bottom: 10px; }
+  h1 { font-size: 50px; line-height: 1.1; font-weight: 700; }
+  h2 { font-size: 36px; line-height: 1.15; font-weight: 700; margin-bottom: 26px; }
+  h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+  p, li { font-size: 21px; line-height: 1.45; }
+  ul { padding-left: 26px; }
+  li { margin-bottom: 8px; }
+  .muted { color: var(--muted); }
+  .foot { position: absolute; left: 72px; right: 72px; bottom: 22px; display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+  .cols { display: flex; gap: 40px; }
+  .col { flex: 1; min-width: 0; }
+  .card { border: 1px solid var(--line); border-radius: 10px; padding: 18px 22px; background: #fff; }
+  .card.soft { background: var(--accent-soft); border-color: #bfe5df; }
+  .card.warn { background: var(--warn-soft); border-color: #f1d3a3; }
+  pre { background: var(--code-bg); color: var(--code-ink); border-radius: 10px; padding: 16px 20px; font-family: Consolas, "Cascadia Mono", monospace; font-size: 15.5px; line-height: 1.5; white-space: pre; overflow: hidden; }
+  pre .c { color: #7dd3a8; } pre .k { color: #7cc4ff; } pre .s { color: #f5b97a; } pre .x { color: #ff8a80; } pre .g { color: #7dd3a8; font-weight: 700; }
+  code { font-family: Consolas, monospace; background: #eef1f6; padding: 1px 6px; border-radius: 4px; font-size: .92em; }
+  .pill { display: inline-block; font-size: 13px; font-weight: 700; padding: 3px 10px; border-radius: 999px; }
+  .pill.bad { background: var(--bad-soft); color: var(--bad); }
+  .pill.good { background: var(--good-soft); color: var(--good); }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); font-size: 18px; }
+  th { font-size: 14px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+
+  /* title slide */
+  .title { background: #14213d; color: #fff; padding-top: 190px; }
+  .title .kicker { color: #6ee7d8; }
+  .title h1 { font-size: 58px; max-width: 900px; }
+  .title p { color: #c8d0e2; margin-top: 26px; font-size: 24px; }
+  .title .foot { color: #9aa6c2; }
+
+  /* architecture diagram */
+  .arch { display: flex; align-items: center; gap: 18px; margin: 6px 0 22px; }
+  .box { border: 2px solid var(--ink); border-radius: 10px; padding: 14px 18px; text-align: center; font-size: 19px; font-weight: 600; background: #fff; }
+  .box.sut { background: var(--accent-soft); border-color: var(--accent); }
+  .box.mock { background: var(--warn-soft); border-color: var(--warn); border-style: dashed; }
+  .arrow { font-size: 26px; color: var(--muted); }
+
+  /* boundary timeline */
+  .tl { position: relative; margin-top: 6px; }
+  .tl-row { display: flex; align-items: center; height: 34px; }
+  .tl-label { width: 118px; font-size: 14px; color: var(--muted); }
+  .tl-track { position: relative; flex: 1; height: 100%; }
+  .tl-bar { position: absolute; top: 8px; height: 18px; border-radius: 4px; }
+  .tl-exist { background: #94a3b8; }
+  .tl-ok { background: var(--good); }
+  .tl-no { background: var(--bad); }
+  .tl-res { width: 92px; font-size: 13px; font-weight: 700; text-align: right; }
+  .tl-guide { position: absolute; top: 0; bottom: 0; width: 0; border-left: 2px dashed #94a3b8; opacity: .7; }
+  .step { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 12px; }
+  .step .n { flex: none; width: 34px; height: 34px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 17px; }
+  .step p { font-size: 20px; }
+  .big { font-size: 84px; font-weight: 700; color: var(--accent); line-height: 1; }
+  .placeholder { border: 2px dashed #b6bfd0; border-radius: 12px; height: 250px; display: flex; align-items: center; justify-content: center; text-align: center; color: var(--muted); font-size: 18px; padding: 20px; background: #f7f8fb; }
+</style>
+</head>
+<body>
+
+<!-- 1. Title -->
+<section class="slide title">
+  <div class="kicker">Mini project - part 1</div>
+  <h1>Unit testing the core business logic of the Hotel Booking solution</h1>
+  <p>Software Quality</p>
+  <div class="foot"><span>HotelBooking_Clean_Async</span><span>xUnit &middot; Moq &middot; SonarCloud</span></div>
+</section>
+
+<!-- 2. Agenda -->
+<section class="slide">
+  <div class="kicker">Overview</div>
+  <h2>What we will show in 15 minutes</h2>
+  <div class="cols">
+    <div class="col">
+      <div class="step"><div class="n">1</div><p><b>System under test</b> - what <code>BookingManager</code> does and how it is wired</p></div>
+      <div class="step"><div class="n">2</div><p><b>Test design</b> - structure, naming, shared setup</p></div>
+      <div class="step"><div class="n">3</div><p><b>Mocking</b> - isolating the logic from the database with Moq</p></div>
+      <div class="step"><div class="n">4</div><p><b>Data-driven test</b> - boundary value analysis with <code>[Theory]</code></p></div>
+    </div>
+    <div class="col">
+      <div class="step"><div class="n">5</div><p><b>Bugs the tests found</b> - and how we fixed them</p></div>
+      <div class="step"><div class="n">6</div><p><b>Coverage</b> of the business logic</p></div>
+      <div class="step"><div class="n">7</div><p><b>SonarCloud</b> and the <b>Project health dashboard</b></p></div>
+      <div class="step"><div class="n">8</div><p><b>Conclusions</b></p></div>
+    </div>
+  </div>
+  <div class="foot"><span>Mini project part 1</span><span>2</span></div>
+</section>
+
+<!-- 3. System under test -->
+<section class="slide">
+  <div class="kicker">System under test</div>
+  <h2>BookingManager holds the business rules</h2>
+  <div class="arch">
+    <div class="box">Controllers / MVC</div><div class="arrow">&rarr;</div>
+    <div class="box sut">BookingManager<br><span style="font-weight:400;font-size:15px">HotelBooking.Core</span></div><div class="arrow">&rarr;</div>
+    <div class="box mock"><code style="background:none">IRepository&lt;Booking&gt;</code><br><code style="background:none">IRepository&lt;Room&gt;</code></div><div class="arrow">&rarr;</div>
+    <div class="box">Database</div>
+  </div>
+  <p class="muted" style="margin-bottom:18px">Repositories are injected through the constructor, so tests can replace them with fakes.</p>
+  <table>
+    <tr><th style="width:290px">Method</th><th>Rule to test</th></tr>
+    <tr><td><code>FindAvailableRoom</code></td><td>Start date must be in the future and not after the end date. Returns the first room without an overlapping <i>active</i> booking, or -1.</td></tr>
+    <tr><td><code>CreateBooking</code></td><td>If a room is free: assign it, mark the booking active, save it. Otherwise return false and save nothing.</td></tr>
+    <tr><td><code>GetFullyOccupiedDates</code></td><td>Return every date in the period on which <i>all</i> rooms have an active booking.</td></tr>
+  </table>
+  <div class="foot"><span>Mini project part 1</span><span>3</span></div>
+</section>
+
+<!-- 4. Test design -->
+<section class="slide">
+  <div class="kicker">Test design</div>
+  <h2>32 unit tests, one consistent structure</h2>
+  <div class="cols">
+    <div class="col">
+      <ul>
+        <li><b>xUnit v3</b> as test framework, <b>Moq</b> as mocking framework</li>
+        <li><b>Arrange - Act - Assert</b> in every test</li>
+        <li>Names read as a sentence: <code>Method_Scenario_ExpectedResult</code></li>
+        <li>Constructor creates the mocks and a default hotel with <b>2 rooms</b>; each test only sets up what it needs</li>
+        <li>Helper <code>SetUpBookings(...)</code> keeps the Arrange part short</li>
+        <li>Dates are relative to <code>DateTime.Today</code>, so tests never expire</li>
+      </ul>
+    </div>
+    <div class="col">
+      <div class="card soft" style="margin-bottom:16px">
+        <h3>How the cases were chosen</h3>
+        <p style="font-size:19px"><b>Equivalence classes:</b> invalid dates, no bookings, free room, all rooms taken, inactive (cancelled) booking.</p>
+        <p style="font-size:19px;margin-top:8px"><b>Boundary values:</b> the day before, the same day, and the day after an existing booking.</p>
+      </div>
+<pre><span class="k">public</span> BookingManagerTests()
+{
+    rooms = <span class="k">new</span> List&lt;Room&gt; { <span class="c">/* Id 1 and 2 */</span> };
+    mockBookingRepository = <span class="k">new</span> Mock&lt;IRepository&lt;Booking&gt;&gt;();
+    mockRoomRepository    = <span class="k">new</span> Mock&lt;IRepository&lt;Room&gt;&gt;();
+    mockRoomRepository.Setup(r =&gt; r.GetAllAsync())
+                      .ReturnsAsync(rooms);
+    bookingManager = <span class="k">new</span> BookingManager(
+        mockBookingRepository.Object,
+        mockRoomRepository.Object);
+}</pre>
+    </div>
+  </div>
+  <div class="foot"><span>Mini project part 1</span><span>4</span></div>
+</section>
+
+<!-- 5. Mocking -->
+<section class="slide">
+  <div class="kicker">Mocking framework</div>
+  <h2>Moq replaces the database, so the tests test only the logic</h2>
+  <div class="cols">
+    <div class="col">
+      <div class="card" style="margin-bottom:16px">
+        <h3>Stubbing - control the input</h3>
+        <p style="font-size:19px"><code>Setup(...).ReturnsAsync(...)</code> decides which bookings and rooms the manager sees. No database, fast and deterministic.</p>
+      </div>
+      <div class="card">
+        <h3>Verification - check the interaction</h3>
+        <p style="font-size:19px"><code>Verify(..., Times.Once)</code> and <code>Times.Never</code> prove that <code>AddAsync</code> is called when a room is free, and not called when the hotel is full.</p>
+      </div>
+    </div>
+    <div class="col">
+<pre><span class="c">// CreateBooking: room is free</span>
+SetUpBookings();
+<span class="k">var</span> booking = <span class="k">new</span> Booking {
+    StartDate = Today.AddDays(1),
+    EndDate   = Today.AddDays(2) };
+
+<span class="k">await</span> bookingManager.CreateBooking(booking);
+
+mockBookingRepository.Verify(
+    r =&gt; r.AddAsync(booking), <span class="g">Times.Once</span>);
+
+<span class="c">// CreateBooking: all rooms taken</span>
+mockBookingRepository.Verify(
+    r =&gt; r.AddAsync(It.IsAny&lt;Booking&gt;()),
+    <span class="g">Times.Never</span>);</pre>
+    </div>
+  </div>
+  <div class="foot"><span>Mini project part 1</span><span>5</span></div>
+</section>
+
+<!-- 6. Data-driven -->
+<section class="slide">
+  <div class="kicker">Data-driven unit test</div>
+  <h2>One test method, six boundary cases</h2>
+  <div class="cols">
+    <div class="col" style="flex:1.05">
+<pre><span class="k">public static</span> IEnumerable&lt;<span class="k">object</span>[]&gt; OverlapBoundaryCases()
+{
+    <span class="c">// startOffset, endOffset, expectRoom1Available</span>
+    <span class="k">yield return new object</span>[] {  1,  9, <span class="k">true</span>  };
+    <span class="k">yield return new object</span>[] {  1, 10, <span class="k">false</span> };
+    <span class="k">yield return new object</span>[] { 15, 15, <span class="k">false</span> };
+    <span class="k">yield return new object</span>[] { 20, 25, <span class="k">false</span> };
+    <span class="k">yield return new object</span>[] { 21, 25, <span class="k">true</span>  };
+    <span class="k">yield return new object</span>[] {  5, 25, <span class="k">false</span> };
+}
+
+[<span class="g">Theory</span>]
+[<span class="g">MemberData</span>(<span class="k">nameof</span>(OverlapBoundaryCases))]
+<span class="k">public async</span> Task FindAvailableRoom_
+    OverlapWithExistingBooking_ReturnsExpectedAvailability(
+    <span class="k">int</span> startOffset, <span class="k">int</span> endOffset, <span class="k">bool</span> expectRoom1)
+{
+    <span class="c">// existing booking: room 1, day 10 to day 20</span>
+    ...
+}</pre>
+    </div>
+    <div class="col" style="flex:.95">
+      <h3>Existing booking on room 1: day 10 to day 20</h3>
+      <div class="tl">
+        <div class="tl-row"><div class="tl-label">existing</div><div class="tl-track"><div class="tl-bar tl-exist" style="left:38.46%;width:38.46%"></div></div><div class="tl-res"></div></div>
+        <div class="tl-row"><div class="tl-label">day 1 - 9</div><div class="tl-track"><div class="tl-bar tl-ok" style="left:3.85%;width:30.8%"></div></div><div class="tl-res" style="color:var(--good)">room 1 free</div></div>
+        <div class="tl-row"><div class="tl-label">day 1 - 10</div><div class="tl-track"><div class="tl-bar tl-no" style="left:3.85%;width:34.6%"></div></div><div class="tl-res" style="color:var(--bad)">room 2</div></div>
+        <div class="tl-row"><div class="tl-label">day 15 - 15</div><div class="tl-track"><div class="tl-bar tl-no" style="left:57.7%;width:3.8%"></div></div><div class="tl-res" style="color:var(--bad)">room 2</div></div>
+        <div class="tl-row"><div class="tl-label">day 20 - 25</div><div class="tl-track"><div class="tl-bar tl-no" style="left:76.9%;width:23%"></div></div><div class="tl-res" style="color:var(--bad)">room 2</div></div>
+        <div class="tl-row"><div class="tl-label">day 21 - 25</div><div class="tl-track"><div class="tl-bar tl-ok" style="left:80.8%;width:19.2%"></div></div><div class="tl-res" style="color:var(--good)">room 1 free</div></div>
+        <div class="tl-row"><div class="tl-label">day 5 - 25</div><div class="tl-track"><div class="tl-bar tl-no" style="left:15.4%;width:84.6%"></div></div><div class="tl-res" style="color:var(--bad)">room 2</div></div>
+      </div>
+      <p class="muted" style="font-size:17px;margin-top:14px">Red = overlaps, so room 1 is skipped. Green = no overlap. The interesting cases sit exactly on the edges (day 10 and day 20), where <code>&lt;</code> versus <code>&lt;=</code> matters.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Mini project part 1</span><span>6</span></div>
+</section>
+
+<!-- 7. Second theory + inactive -->
+<section class="slide">
+  <div class="kicker">Data-driven unit test</div>
+  <h2>A second theory: which dates are fully occupied?</h2>
+  <div class="cols">
+    <div class="col">
+      <p style="margin-bottom:14px"><code>GetFullyOccupiedDates</code> is tested with a <code>[MemberData]</code> theory whose data includes whole arrays of bookings and the expected dates.</p>
+      <table>
+        <tr><th>Case</th><th>Expected result</th></tr>
+        <tr><td>Both rooms booked for the whole period</td><td>every date returned</td></tr>
+        <tr><td>Both rooms booked for the middle day only</td><td>only that day</td></tr>
+        <tr><td>One booking is inactive (cancelled)</td><td>empty list</td></tr>
+      </table>
+    </div>
+    <div class="col">
+<pre>[<span class="g">Theory</span>]
+[<span class="g">MemberData</span>(<span class="k">nameof</span>(FullyOccupiedDatesCases))]
+<span class="k">public async</span> Task GetFullyOccupiedDates_
+    VariousBookingConfigurations_ReturnsExpectedDates(
+    Booking[] bookings, DateTime start,
+    DateTime end, DateTime[] expectedDates)
+{
+    <span class="c">// Arrange</span>
+    SetUpBookings(bookings);
+
+    <span class="c">// Act</span>
+    List&lt;DateTime&gt; occupied =
+        <span class="k">await</span> bookingManager
+            .GetFullyOccupiedDates(start, end);
+
+    <span class="c">// Assert</span>
+    Assert.Equal(expectedDates, occupied);
+}</pre>
+    </div>
+  </div>
+  <div class="foot"><span>Mini project part 1</span><span>7</span></div>
+</section>
+
+<!-- 8. Bug 1 -->
+<section class="slide">
+  <div class="kicker">Bugs found by the tests</div>
+  <h2>Bug 1: bookings were counted instead of rooms</h2>
+  <div class="cols">
+    <div class="col">
+      <p style="margin-bottom:12px"><code>GetFullyOccupiedDates</code> compared the number of <b>bookings</b> on a date with the number of rooms.</p>
+      <div class="card warn" style="margin-bottom:14px">
+        <p style="font-size:19px"><b>Example:</b> 2 rooms, and two active bookings on <i>room 1</i> for the same days. The code counts 2 bookings, 2 &ge; 2, and reports the dates as fully occupied. Room 2 is actually free.</p>
+      </div>
+      <h3>Regression test</h3>
+<pre><span class="c">// both bookings on room 1, room 2 is free</span>
+SetUpBookings(
+  <span class="k">new</span> Booking { RoomId = 1, IsActive = <span class="k">true</span>, ... },
+  <span class="k">new</span> Booking { RoomId = 1, IsActive = <span class="k">true</span>, ... });
+
+<span class="k">var</span> result = <span class="k">await</span> bookingManager
+    .GetFullyOccupiedDates(start, end);
+
+Assert.Empty(result);</pre>
+    </div>
+    <div class="col">
+      <h3>Step 1 - the test fails on the old code <span class="pill bad">RED</span></h3>
+      <p style="font-size:18px;margin-bottom:14px" class="muted">The method returned every date from day 5 to day 10 instead of an empty list.</p>
+      <h3>Step 2 - the fix <span class="pill good">GREEN</span></h3>
+<pre><span class="x">// OLD (bug)
+// if (noOfBookings.Count() &gt;= noOfRooms)</span>
+
+<span class="c">// FIXED: count each booked room once</span>
+<span class="k">if</span> (noOfBookings
+      .Select(b =&gt; b.RoomId)
+      .Distinct()
+      .Count() &gt;= noOfRooms)
+    fullyOccupiedDates.Add(d);</pre>
+      <p style="font-size:18px;margin-top:12px" class="muted">After the fix all 32 tests pass.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Mini project part 1</span><span>8</span></div>
+</section>
+
+<!-- 9. Bug 2 -->
+<section class="slide">
+  <div class="kicker">Bugs found by the tests</div>
+  <h2>Bug 2: off-by-one in the overlap check</h2>
+  <div class="cols">
+    <div class="col">
+      <p style="margin-bottom:14px">In <code>FindAvailableRoom</code> a comparison used <code>&lt;=</code> where it needed <code>&lt;</code>.</p>
+<pre><span class="x">// wrong: request ending ON the existing
+// start date looked like "no overlap"
+startDate &lt;= b.StartDate &amp;&amp; endDate &lt;= b.StartDate</span>
+
+<span class="c">// correct</span>
+startDate &lt; b.StartDate &amp;&amp; endDate &lt; b.StartDate</pre>
+    </div>
+    <div class="col">
+      <div class="card soft">
+        <h3>Why the data-driven test catches it</h3>
+        <p style="font-size:19px">The case <code>{ 1, 10, false }</code> asks for a stay that ends exactly on the day the existing booking starts. With <code>&lt;=</code> the room is wrongly returned as free, so the assertion fails.</p>
+        <p style="font-size:19px;margin-top:10px">A single "typical" test would never hit this edge. This is why boundary values are worth a theory.</p>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Mini project part 1</span><span>9</span></div>
+</section>
+
+<!-- 10. Coverage -->
+<section class="slide">
+  <div class="kicker">Coverage</div>
+  <h2>The business logic is fully covered</h2>
+  <div class="cols" style="align-items:center">
+    <div class="col" style="text-align:center">
+      <div class="big">100%</div>
+      <p class="muted" style="margin-top:6px">line and branch coverage of <code>BookingManager</code></p>
+      <p class="muted" style="font-size:16px;margin-top:10px">measured locally with <code>dotnet-coverage</code>, 32 tests, 0 failures</p>
+    </div>
+    <div class="col">
+      <ul>
+        <li>All three public methods and every branch of the validation and overlap conditions are exercised.</li>
+        <li>Coverage is a floor, not proof: the bugs on the previous slides were found by <b>choosing the right inputs</b> (same room twice, edge dates), not by the coverage number.</li>
+        <li>Inactive bookings and a hotel with three rooms are tested explicitly, so the room count is not hard-coded to 2.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot"><span>Mini project part 1</span><span>10</span></div>
+</section>
+
+<!-- 11. SonarCloud + dashboard -->
+<section class="slide" style="padding-top:44px">
+  <div class="kicker">SonarCloud &amp; Project health dashboard</div>
+  <h2 style="margin-bottom:14px;font-size:32px">The Project health dashboard on SonarCloud</h2>
+  <div style="width:900px;height:323px;margin:0 auto;overflow:hidden;border-radius:10px;border:1px solid var(--line)"><img src="sonarcloud_overview.png" style="display:block;width:900px;margin-top:-22px" alt="SonarCloud Overview"></div>
+  <div class="cols" style="gap:20px;margin-top:14px">
+    <div class="col card" style="padding:12px 16px"><h3 style="font-size:17px">Quality gate: Passed</h3><p style="font-size:16px;line-height:1.35">All conditions pass on the latest analysis.</p></div>
+    <div class="col card" style="padding:12px 16px"><h3 style="font-size:17px">9 open issues, 1.8% duplication</h3><p style="font-size:16px;line-height:1.35">4 reliability issues (all medium, rating C) and 5 maintainability issues (rating A). Duplication is low.</p></div>
+    <div class="col card warn" style="padding:12px 16px"><h3 style="font-size:17px">Coverage 21.4% (whole solution)</h3><p style="font-size:16px;line-height:1.35">Counts MVC, Web API and Infrastructure too, which are outside the scope of the Core unit tests. On the SonarCloud Code tab, <b>BookingManager.cs itself shows 100%</b>, 0 uncovered lines.</p></div>
+  </div>
+  <div class="foot"><span>Mini project part 1</span><span>11</span></div>
+</section>
+
+<!-- 12. Conclusions -->
+<section class="slide">
+  <div class="kicker">Conclusions</div>
+  <h2>What we learned</h2>
+  <div class="cols">
+    <div class="col">
+      <ul>
+        <li><b>Dependency injection</b> is what makes the code testable: repositories are interfaces, so Moq can replace them.</li>
+        <li><b>Mocks</b> give speed and control; <code>Verify</code> checks behaviour, not only return values.</li>
+        <li><b>Data-driven tests</b> turn boundary analysis into a compact table of cases.</li>
+      </ul>
+    </div>
+    <div class="col">
+      <ul>
+        <li>Tests found <b>two real bugs</b>: the wrong count and the off-by-one comparison.</li>
+        <li>Write the failing test first, then fix: red, green, and the test stays as a regression guard.</li>
+        <li>Static analysis and coverage tell us <i>where to look</i>; well-chosen inputs tell us <i>if it is right</i>.</li>
+      </ul>
+    </div>
+  </div>
+  <div style="margin-top:34px;text-align:center"><span style="font-size:30px;font-weight:700;color:var(--accent)">Thank you - questions?</span></div>
+  <div class="foot"><span>Mini project part 1</span><span>12</span></div>
+</section>
+
+</body>
+</html>

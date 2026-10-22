@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mini project part 1 - Speaker notes</title>
+<style>
+  @page { size: A4; margin: 16mm 16mm 16mm 16mm; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", Arial, sans-serif; color: #14213d; font-size: 11.5pt; line-height: 1.4; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  h1 { font-size: 22pt; margin-bottom: 4px; }
+  h2 { font-size: 13.5pt; margin: 0 0 6px; }
+  .sub { color: #5b6478; margin-bottom: 14px; }
+  .tip { background: #e3f4f1; border: 1px solid #bfe5df; border-radius: 8px; padding: 9px 12px; margin-bottom: 14px; font-size: 10.5pt; }
+  .slide { border: 1px solid #dfe3ec; border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; page-break-inside: avoid; }
+  .head { display: flex; justify-content: space-between; align-items: baseline; }
+  .time { font-size: 10pt; font-weight: 700; color: #0f766e; }
+  ul { margin: 4px 0 0 18px; padding: 0; }
+  li { margin-bottom: 3px; }
+  code { font-family: Consolas, monospace; background: #eef1f6; padding: 0 4px; border-radius: 3px; font-size: .92em; }
+  .todo { background: #fdf1e0; border: 1px solid #f1d3a3; border-radius: 4px; padding: 0 4px; }
+  table { border-collapse: collapse; width: 100%; margin-bottom: 12px; }
+  td, th { border-bottom: 1px solid #dfe3ec; padding: 5px 8px; text-align: left; font-size: 10.5pt; vertical-align: top; }
+  th { color: #5b6478; font-size: 9pt; text-transform: uppercase; letter-spacing: .05em; }
+  .qa { page-break-inside: avoid; margin-bottom: 8px; }
+  .qa b { color: #0f766e; }
+</style>
+</head>
+<body>
+
+<h1>Speaker notes</h1>
+<div class="sub">Mini project part 1 - unit testing the hotel booking core &middot; target 14 minutes, hard limit 15</div>
+
+<div class="tip">
+  <b>Team presentation:</b> every team member must speak. Suggested split - slides 1-5 (introduction, design, mocking), slides 6-9 (data-driven tests and bugs), slides 10-12 (coverage, SonarCloud, conclusions). Change it to fit your team. Do <b>not</b> explain the CI pipeline itself; only how SonarCloud and the dashboard were used.
+</div>
+
+<table>
+  <tr><th>Slides</th><th>Topic</th><th>Time</th></tr>
+  <tr><td>1-3</td><td>Introduction, plan, system under test</td><td>2:00</td></tr>
+  <tr><td>4-5</td><td>Test design and mocking</td><td>3:30</td></tr>
+  <tr><td>6-7</td><td>Data-driven tests</td><td>3:00</td></tr>
+  <tr><td>8-9</td><td>Bugs found</td><td>2:45</td></tr>
+  <tr><td>10-12</td><td>Coverage, SonarCloud, conclusions</td><td>3:00</td></tr>
+</table>
+
+<div class="slide">
+  <div class="head"><h2>1. Title</h2><span class="time">0:30</span></div>
+  <ul>
+    <li>Introduce the team and the project: a hotel booking system, and we tested its core business logic in <code>HotelBooking.Core</code>.</li>
+    <li>Say what is coming: test design, mocking, a data-driven test, the bugs we found, SonarCloud.</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <div class="head"><h2>2. Overview</h2><span class="time">0:15</span></div>
+  <ul>
+    <li>Read the eight points quickly. Do not explain them yet.</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <div class="head"><h2>3. System under test</h2><span class="time">1:15</span></div>
+  <ul>
+    <li>All business rules are in <code>BookingManager</code>. It depends on two interfaces, <code>IRepository&lt;Booking&gt;</code> and <code>IRepository&lt;Room&gt;</code>.</li>
+    <li>They are injected through the constructor. <b>That is what makes the class testable</b>: in tests we hand it fakes instead of a database.</li>
+    <li>Three methods: <code>FindAvailableRoom</code> (start date in the future, no overlap with active bookings, else -1), <code>CreateBooking</code> (assign room, set active, save), <code>GetFullyOccupiedDates</code> (dates when all rooms are booked).</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <div class="head"><h2>4. Test design</h2><span class="time">1:45</span></div>
+  <ul>
+    <li>32 tests, xUnit v3 and Moq. Every test follows Arrange - Act - Assert.</li>
+    <li>Names are sentences: <code>Method_Scenario_ExpectedResult</code>, e.g. <code>CreateBooking_NoRoomAvailable_ReturnsFalse</code>. A failing test name tells you what broke.</li>
+    <li>The constructor builds the mocks and a default hotel with two rooms. Each test sets up only what it needs, with the helper <code>SetUpBookings</code>.</li>
+    <li>Dates are relative to <code>DateTime.Today</code>, so the tests do not expire.</li>
+    <li>Choosing cases: <b>equivalence classes</b> (invalid dates, no bookings, free room, all rooms taken, cancelled booking) and <b>boundary values</b> (day before, same day, day after a booking).</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <div class="head"><h2>5. Mocking with Moq</h2><span class="time">1:45</span></div>
+  <ul>
+    <li>Why: the tests must check the logic, not the database. A mock is fast and fully under our control.</li>
+    <li><b>Stubbing:</b> <code>Setup(...).ReturnsAsync(...)</code> decides which rooms and bookings the manager sees.</li>
+    <li><b>Verification:</b> <code>Verify(r =&gt; r.AddAsync(booking), Times.Once)</code> proves the booking is saved exactly once when a room is free. <code>Times.Never</code> proves nothing is saved when the hotel is full.</li>
+    <li>Point: verification checks <i>behaviour</i> (what the code did), not only its return value.</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <div class="head"><h2>6. Data-driven test</h2><span class="time">2:15</span></div>
+  <ul>
+    <li>One test method, six cases, supplied by <code>[MemberData]</code>. Adding a case is one new line, not a new method.</li>
+    <li>Setup: room 1 is booked from day 10 to day 20. Each row is <i>start offset, end offset, is room 1 available</i>.</li>
+    <li>Walk through the timeline on the right. Two cases to point out: <code>{1, 10, false}</code> ends on the day the booking starts, so it overlaps. <code>{21, 25, true}</code> starts the day after it ends, so it is free.</li>
+    <li>Why <code>MemberData</code> and not <code>InlineData</code>: <code>InlineData</code> needs compile-time constants, so dates cannot go in it. We pass day offsets and build the dates in the test.</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <div class="head"><h2>7. Second theory</h2><span class="time">0:45</span></div>
+  <ul>
+    <li>Same idea for <code>GetFullyOccupiedDates</code>, but the data contains whole arrays of bookings and the expected dates.</li>
+    <li>Three cases: both rooms booked for the full period, both booked for the middle day only, one booking inactive.</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <div class="head"><h2>8. Bug 1 - bookings counted instead of rooms</h2><span class="time">1:45</span></div>
+  <ul>
+    <li>The method compared the number of <b>bookings</b> on a date with the number of rooms.</li>
+    <li>Example: two rooms, two active bookings on <b>room 1</b>. The code counts 2 &ge; 2 and says fully occupied, but room 2 is free.</li>
+    <li>We wrote the regression test first: it <b>failed</b> on the old code (red). Then we changed the condition to count <b>distinct room ids</b>, and it passed (green).</li>
+    <li>The old line is kept as a comment marked OLD CODE (BUG), the new one marked FIXED. After the fix all 32 tests pass.</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <div class="head"><h2>9. Bug 2 - off-by-one</h2><span class="time">1:00</span></div>
+  <ul>
+    <li>In <code>FindAvailableRoom</code> a comparison used <code>&lt;=</code> where it needed <code>&lt;</code>.</li>
+    <li>The boundary case <code>{1, 10, false}</code> catches it: a stay ending on the day another booking starts was wrongly seen as free.</li>
+    <li>Message: a typical example would never hit this edge. That is the value of boundary values in a data-driven test.</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <div class="head"><h2>10. Coverage</h2><span class="time">0:45</span></div>
+  <ul>
+    <li><code>BookingManager</code> has 100% line and branch coverage: measured locally with <code>dotnet-coverage</code>, and confirmed on the SonarCloud Code tab (<code>BookingManager.cs</code>, 0 uncovered lines).</li>
+    <li>Caveat to say out loud: coverage is a floor, not proof. Both bugs were found by choosing the right inputs, not by the coverage number.</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <div class="head"><h2>11. SonarCloud and Project health dashboard</h2><span class="time">1:30</span></div>
+  <ul>
+    <li>Open the live dashboard (SonarCloud Overview) or point at the screenshot. Four tiles: quality gate, open issues, duplications, coverage.</li>
+    <li><b>Quality gate: Passed</b>. Duplication 1.8%.</li>
+    <li><b>9 open issues:</b> 4 reliability issues, all medium impact, so the Reliability rating is <b>C</b> (C means at least one medium-impact issue). 5 maintainability issues, and the Maintainability rating is <b>A</b> (technical debt ratio below 5%). All 4 are in the starter code, none in <code>HotelBooking.Core</code> or the tests: <code>app.Run()</code> should be <code>RunAsync()</code> in the MVC and Web API <code>Program.cs</code> (async-await rule), <code>RenderSection</code> should be <code>RenderSectionAsync</code> and the <code>&lt;html&gt;</code> tag lacks a <code>lang</code> attribute in <code>_Layout.cshtml</code> (accessibility).</li>
+    <li><b>Coverage 21.4%</b> is for the whole solution. It also counts MVC, Web API and Infrastructure, which are outside the scope of the Core unit tests. on the SonarCloud Code tab, <code>BookingManager.cs</code> itself is listed at 100% with 0 uncovered lines - confirmed in SonarCloud, not just locally. <span class="todo">Check the Code tab in SonarCloud and say what it shows for Core.</span></li>
+    <li><span class="todo">Add: what we did with the dashboard, e.g. looked at the 9 issues, checked that coverage did not drop.</span></li>
+    <li>Do not explain the CI pipeline itself.</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <div class="head"><h2>12. Conclusions</h2><span class="time">0:45</span></div>
+  <ul>
+    <li>Dependency injection makes the code testable; mocks give speed and control; data-driven tests turn boundary analysis into a table.</li>
+    <li>Tests found two real bugs. Write the failing test first, then fix, and it stays as a regression guard.</li>
+    <li>Static analysis and coverage tell us where to look; well-chosen inputs tell us if the code is right.</li>
+    <li>Finish: "Thank you, we are happy to answer questions."</li>
+  </ul>
+</div>
+
+<h2 style="margin-top:18px">Likely questions</h2>
+<div class="qa"><b>Q: Mock or stub - what is the difference?</b><br>A stub only returns prepared data (<code>Setup/ReturnsAsync</code>). A mock is also checked for how it was called (<code>Verify</code>). Moq objects can do both.</div>
+<div class="qa"><b>Q: Why a Theory instead of several Facts?</b><br>Same logic with different data. One method is easier to maintain, and a new case is one line.</div>
+<div class="qa"><b>Q: Why are the dates relative to today?</b><br><code>FindAvailableRoom</code> rejects dates that are not in the future. Fixed dates would start failing once they pass.</div>
+<div class="qa"><b>Q: Is 100% coverage enough?</b><br>No. It shows lines were executed, not that the assertions are right. That is why we chose boundary values and found two bugs.</div>
+<div class="qa"><b>Q: Why is SonarCloud coverage only 21.4%?</b><br>It counts the whole solution. The Core business logic is 100% locally; MVC and Infrastructure are not covered by these unit tests.</div>
+<div class="qa"><b>Q: How do you know the tests are good?</b><br>They failed on the buggy code (red) and pass on the fixed code (green). We can also break the code on purpose and check that a test fails.</div>
+
+<div class="qa"><b>Q: Why is the Reliability rating C?</b><br>SonarCloud gives C when there is at least one medium-impact reliability issue; we have 4. All 4 are in the MVC and Web API startup and layout files from the starter project (<code>Program.cs</code> x2, <code>_Layout.cshtml</code> x2), unchanged since the initial commit. None are in the business logic or the tests. They are quick fixes (2-5 minutes each) that we did not need for the unit-testing goal.</div>
+
+</body>
+</html>
