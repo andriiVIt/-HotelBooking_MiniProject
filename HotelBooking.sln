@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HotelBooking.WebApi", "Hote
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HotelBooking.BddTests", "HotelBooking.BddTests\HotelBooking.BddTests.csproj", "{3DB40D4B-3EB7-4028-917A-33A4CF62CFDA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HotelBooking.SeleniumTests", "HotelBooking.SeleniumTests\HotelBooking.SeleniumTests.csproj", "{F256D9F7-5068-4DF7-B90F-BC19674324EC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -111,6 +113,18 @@ Global
 		{3DB40D4B-3EB7-4028-917A-33A4CF62CFDA}.Release|x64.Build.0 = Release|Any CPU
 		{3DB40D4B-3EB7-4028-917A-33A4CF62CFDA}.Release|x86.ActiveCfg = Release|Any CPU
 		{3DB40D4B-3EB7-4028-917A-33A4CF62CFDA}.Release|x86.Build.0 = Release|Any CPU
+		{F256D9F7-5068-4DF7-B90F-BC19674324EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F256D9F7-5068-4DF7-B90F-BC19674324EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F256D9F7-5068-4DF7-B90F-BC19674324EC}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F256D9F7-5068-4DF7-B90F-BC19674324EC}.Debug|x64.Build.0 = Debug|Any CPU
+		{F256D9F7-5068-4DF7-B90F-BC19674324EC}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F256D9F7-5068-4DF7-B90F-BC19674324EC}.Debug|x86.Build.0 = Debug|Any CPU
+		{F256D9F7-5068-4DF7-B90F-BC19674324EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F256D9F7-5068-4DF7-B90F-BC19674324EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F256D9F7-5068-4DF7-B90F-BC19674324EC}.Release|x64.ActiveCfg = Release|Any CPU
+		{F256D9F7-5068-4DF7-B90F-BC19674324EC}.Release|x64.Build.0 = Release|Any CPU
+		{F256D9F7-5068-4DF7-B90F-BC19674324EC}.Release|x86.ActiveCfg = Release|Any CPU
+		{F256D9F7-5068-4DF7-B90F-BC19674324EC}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

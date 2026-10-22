@@ -399,3 +399,7 @@ FodyWeavers.xsd
 
 # SonarCloud scanner (downloaded by CI, cached locally by tooling)
 .sonar/
+
+# SQLite temp files
+*.db-shm
+*.db-wal
